@@ -1,0 +1,10 @@
+[workspace]
+
+members = [
+    "cargo-files",
+    "cargo-files-core",
+]
+
+
+[profile.dev.package.syn]
+opt-level = 3

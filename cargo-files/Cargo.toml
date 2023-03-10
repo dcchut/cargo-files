@@ -1,0 +1,13 @@
+[package]
+name = "cargo-files"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Core functionality for cargo-files"
+repository = "https://github.com/dcchut/cargo-files"
+documentation = "https://docs.rs/cargo-files"
+readme = "README.md"
+
+[dependencies]
+cargo-files-core = { path = "../cargo-files-core" }
+glob = "0.3"
