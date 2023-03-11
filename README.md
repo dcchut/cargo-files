@@ -40,7 +40,7 @@ cargo files
 
 ## Developers
 
-The `cargo-files-core` create contains the logic underlying `cargo-files`, and can
+The `cargo-files-core` crate contains the logic underlying `cargo-files`, and can
 be reused by other applications that care about source files.  At the moment the API
 is extremely simplistic, but any improvement suggestions are welcome!
 
