@@ -9,12 +9,12 @@ A tool to list all source files in a cargo crate.
 
 ## Motivation
 
-While I was writing [cargo-derivefmt](https://github.com/dcchut/cargo-derivefmt) I really
-wished I had a simple way to obtain a list of all the source files in a cargo crate.
-I wasn't able to find an existing crate which did this, so I wrote this one.
+While I was writing [cargo-derivefmt](https://github.com/dcchut/cargo-derivefmt) I found myself
+wishing for a simple way to get the source files in a cargo crate.  I wasn't able to find
+an existing crate which did this, so I wrote this one.
 
-This library should be considered a work-in-progress.  There are likely to be many bugs
-and unsupported situations.
+This library is still a work-in-progress.  There are likely many issues and unsupported
+situations.
 
 ## CLI
 
