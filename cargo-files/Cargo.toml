@@ -10,5 +10,5 @@ documentation = "https://docs.rs/cargo-files"
 readme = "../README.md"
 
 [dependencies]
-cargo-files-core = { path = "../cargo-files-core" }
+cargo-files-core = { path = "../cargo-files-core", version = "0.1.0" }
 clap = { version = "4.1", features = ["derive"] }
