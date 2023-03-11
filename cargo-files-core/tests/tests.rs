@@ -1,14 +1,4 @@
-use tempfile::TempDir;
-
-macro_rules! set_snapshot_suffix {
-    ($($expr:expr),*) => {
-        let mut settings = insta::Settings::clone_current();
-        settings.set_snapshot_suffix(format!($($expr,)*));
-        let _guard = settings.bind_to_scope();
-    }
-}
-
-fn run_test(krate: &TempDir) -> String {
+fn run_test(krate: &tempfile::TempDir) -> String {
     let crate_root = dunce::canonicalize(krate.path()).unwrap();
     let projects = cargo_files_core::get_projects(Some(&crate_root.join("Cargo.toml"))).unwrap();
 
