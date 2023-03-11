@@ -5,6 +5,13 @@ use std::path::PathBuf;
 /// List all files in a cargo crate.
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
+// Cargo passes "files" to cargo-files, so add a hidden argument to capture that.
+#[command(
+    arg(clap::Arg::new("dummy")
+    .value_parser(["files"])
+    .required(false)
+    .hide(true))
+)]
 struct Args {
     /// Path to Cargo.toml
     #[arg(long)]
