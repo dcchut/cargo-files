@@ -40,3 +40,17 @@ fn basic_detection() {
     "
     );
 }
+
+#[test]
+fn new_module_layout() {
+    krate!(
+        "
+        src:
+          - lib.rs [scooby]
+          - scooby.rs [apple, banana]
+          - scooby:
+            - apple.rs
+            - banana.rs
+    "
+    );
+}

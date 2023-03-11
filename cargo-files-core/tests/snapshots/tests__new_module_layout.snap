@@ -1,0 +1,8 @@
+---
+source: cargo-files-core/tests/tests.rs
+expression: run_test(&krate)
+---
+src/lib.rs
+src/scooby.rs
+src/scooby/apple.rs
+src/scooby/banana.rs
