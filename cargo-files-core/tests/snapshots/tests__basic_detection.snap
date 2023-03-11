@@ -1,6 +1,6 @@
 ---
 source: cargo-files-core/tests/tests.rs
-expression: "paths.join(\"\\n\")"
+expression: run_test(&krate)
 ---
 src/lib.rs
 src/test/cat.rs
