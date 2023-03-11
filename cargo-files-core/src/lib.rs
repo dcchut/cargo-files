@@ -1,6 +1,4 @@
 // Inspired by  https://github.com/rust-lang/rustfmt
-// #![deny(warnings)]
-
 pub mod parser;
 
 use crate::parser::extract_crate_files;
