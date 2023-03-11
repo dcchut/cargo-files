@@ -38,6 +38,17 @@ cargo install --git https://github.com/dcchut/cargo-files --locked
 cargo files
 ```
 
+### Sample output
+
+```
+> cargo files
+/home/dcchut/cargo-files/cargo-files/src/main.rs
+/home/dcchut/cargo-files/cargo-files-core/src/lib.rs
+/home/dcchut/cargo-files/cargo-files-core/src/parser.rs
+/home/dcchut/cargo-files/cargo-files-core/tests/tests.rs
+/home/dcchut/cargo-files/cargo-files-test/src/lib.rs
+```
+
 ## Developers
 
 The `cargo-files-core` crate contains the logic underlying `cargo-files`, and can
