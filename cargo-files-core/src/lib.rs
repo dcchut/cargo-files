@@ -3,14 +3,14 @@
 
 pub mod parser;
 
+use crate::parser::extract_crate_files;
+use cargo_metadata::Edition;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashSet};
 use std::hash::{Hash, Hasher};
 use std::io::{self};
 use std::path::{Path, PathBuf};
-use cargo_metadata::Edition;
 use thiserror::Error;
-use crate::parser::extract_crate_files;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -29,7 +29,6 @@ pub enum Error {
     #[error("source file must have a stem")]
     NoStem,
 }
-
 
 /// Get all source files for the given target.
 pub fn get_target_files(target: &Target) -> Result<HashSet<PathBuf>, Error> {
@@ -101,9 +100,7 @@ impl Hash for Target {
 }
 
 /// Return a list of the main source files.
-fn get_targets(
-    manifest_path: Option<&Path>,
-) -> Result<BTreeSet<Target>, Error> {
+fn get_targets(manifest_path: Option<&Path>) -> Result<BTreeSet<Target>, Error> {
     let mut targets = BTreeSet::new();
     get_targets_recursive(manifest_path, &mut targets, &mut BTreeSet::new())?;
 
@@ -113,7 +110,6 @@ fn get_targets(
         Ok(targets)
     }
 }
-
 
 fn get_targets_recursive(
     manifest_path: Option<&Path>,
@@ -133,9 +129,9 @@ fn get_targets_recursive(
             let manifest_path = PathBuf::from(dependency.path.as_ref().unwrap()).join("Cargo.toml");
             if manifest_path.exists()
                 && !metadata
-                .packages
-                .iter()
-                .any(|p| p.manifest_path.eq(&manifest_path))
+                    .packages
+                    .iter()
+                    .any(|p| p.manifest_path.eq(&manifest_path))
             {
                 visited.insert(dependency.name.to_owned());
                 get_targets_recursive(Some(&manifest_path), targets, visited)?;
@@ -146,13 +142,11 @@ fn get_targets_recursive(
     Ok(())
 }
 
-
 fn add_targets(target_paths: &[cargo_metadata::Target], targets: &mut BTreeSet<Target>) {
     for target in target_paths {
         targets.insert(Target::from_target(target));
     }
 }
-
 
 fn get_cargo_metadata(manifest_path: Option<&Path>) -> Result<cargo_metadata::Metadata, io::Error> {
     let mut cmd = cargo_metadata::MetadataCommand::new();

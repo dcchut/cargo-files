@@ -1,17 +1,15 @@
+use crate::Error;
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use syn::{ItemMod};
 use syn::visit::Visit;
-use crate::Error;
+use syn::ItemMod;
 
 #[derive(Default, Debug)]
 struct ModVisitor {
     modules: Vec<Module>,
     stack: Vec<String>,
 }
-
-
 
 impl<'ast> Visit<'ast> for ModVisitor {
     fn visit_item_mod(&mut self, item: &'ast ItemMod) {
@@ -21,7 +19,11 @@ impl<'ast> Visit<'ast> for ModVisitor {
         let mut path = None;
         for attr in &item.attrs {
             if attr.path.is_ident("path") {
-                if let Ok(syn::Meta::NameValue(syn::MetaNameValue { lit: syn::Lit::Str(lit), .. }))  = attr.parse_meta() {
+                if let Ok(syn::Meta::NameValue(syn::MetaNameValue {
+                    lit: syn::Lit::Str(lit),
+                    ..
+                })) = attr.parse_meta()
+                {
                     path = Some(lit.value());
                     break;
                 }
@@ -30,13 +32,15 @@ impl<'ast> Visit<'ast> for ModVisitor {
 
         // AFAIK mod foobar {} blocks don't contribute a file
         if item.content.is_none() {
-            self.modules.push(Module { parts: self.stack.clone(), path });
+            self.modules.push(Module {
+                parts: self.stack.clone(),
+                path,
+            });
         }
 
         syn::visit::visit_item_mod(self, item);
         self.stack.pop().expect("should be balanced");
     }
-
 }
 
 #[derive(Debug)]
@@ -50,10 +54,17 @@ struct Module {
 impl Module {
     /// Return the source file corresponding to this module.
     fn resolve(self, relative_to: &Path) -> Result<PathBuf, Error> {
-        let base_name =relative_to.file_stem().ok_or(Error::NoStem)?.to_string_lossy();
+        let base_name = relative_to
+            .file_stem()
+            .ok_or(Error::NoStem)?
+            .to_string_lossy();
         let mut base_path = relative_to.parent().ok_or(Error::NoParent)?.to_path_buf();
-        let (last, parts) = self.parts.split_last().expect("module must have at least one part");
-        let is_mod_rs = base_name == "mod" || (parts.is_empty() && (base_name == "lib" || base_name == "main"));
+        let (last, parts) = self
+            .parts
+            .split_last()
+            .expect("module must have at least one part");
+        let is_mod_rs =
+            base_name == "mod" || (parts.is_empty() && (base_name == "lib" || base_name == "main"));
 
         // for non-mod-rs files modules are relative to src/a.rs -> /src/a/
         if !is_mod_rs {
@@ -72,7 +83,7 @@ impl Module {
                 Ok(base_path)
             } else {
                 Err(Error::ModuleNotFound)
-            }
+            };
         }
 
         base_path.push(format!("{last}.rs"));

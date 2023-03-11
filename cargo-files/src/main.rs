@@ -1,6 +1,6 @@
+use cargo_files_core::{get_projects, get_target_files};
 use std::collections::HashSet;
 use std::path::Path;
-use cargo_files_core::{get_projects, get_target_files};
 
 fn main() {
     let axum = Path::new("C:/dev/derivefmt/Cargo.toml");

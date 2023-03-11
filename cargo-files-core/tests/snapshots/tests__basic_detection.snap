@@ -1,0 +1,8 @@
+---
+source: cargo-files-core/tests/tests.rs
+expression: "paths.join(\"\\n\")"
+---
+src/lib.rs
+src/test/cat.rs
+src/test/mod.rs
+src/whatever.rs
