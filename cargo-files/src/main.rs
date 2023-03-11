@@ -1,4 +1,4 @@
-use cargo_files_core::{get_projects, get_target_files};
+use cargo_files_core::{get_target_files, get_targets, Error};
 use clap::Parser;
 use std::path::PathBuf;
 
@@ -11,14 +11,16 @@ struct Args {
     manifest_path: Option<PathBuf>,
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     let args: Args = Args::parse();
 
-    let projects = get_projects(args.manifest_path.as_deref()).unwrap();
-    for target in projects {
-        let files = get_target_files(&target).unwrap();
+    let targets = get_targets(args.manifest_path.as_deref())?;
+    for target in targets {
+        let files = get_target_files(&target)?;
         for file in files {
             println!("{}", file.display());
         }
     }
+
+    Ok(())
 }

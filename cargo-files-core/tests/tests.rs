@@ -1,6 +1,6 @@
 fn run_test(krate: &tempfile::TempDir) -> String {
     let crate_root = dunce::canonicalize(krate.path()).unwrap();
-    let projects = cargo_files_core::get_projects(Some(&crate_root.join("Cargo.toml"))).unwrap();
+    let projects = cargo_files_core::get_targets(Some(&crate_root.join("Cargo.toml"))).unwrap();
 
     let mut paths = Vec::new();
     for target in projects {
