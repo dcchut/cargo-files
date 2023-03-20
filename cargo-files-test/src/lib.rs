@@ -12,20 +12,27 @@ use syn::parse;
 /// - file.rs
 /// - file.rs [mod1]
 /// - file.rs [mod1, mod2]
+/// - file.rs [mod1(path/to/f.rs), mod2]
 /// and so on, and so forth.
 fn file_regex() -> &'static Regex {
     static FILE_REGEX: OnceCell<Regex> = OnceCell::new();
     FILE_REGEX.get_or_init(|| {
-        Regex::new(r"^(?P<name>\w+\.rs)\s*?(\s+\[(?P<modules>(\w+)(\s*,\s*?\w+)*)])?$")
+        Regex::new(r"^(?P<name>\w+\.rs)\s*?(\s+\[(?P<modules>(\w+)(\(.*?\))?(\s*,\s*?\w+)*)])?$")
             .expect("failed to compile regex")
     })
+}
+
+#[derive(Clone, Debug)]
+struct Module {
+    name: String,
+    path: Option<String>,
 }
 
 /// Represents a file description such as mod.rs [cat]
 #[derive(Clone, Debug)]
 struct File {
     name: String,
-    modules: Vec<String>,
+    modules: Vec<Module>,
 }
 
 impl<'de> Deserialize<'de> for File {
@@ -48,7 +55,18 @@ impl<'de> Deserialize<'de> for File {
                 let modules = modules.as_str();
                 modules
                     .split(',')
-                    .map(|part| String::from(part.trim()))
+                    .map(|part| {
+                        let (name, path) = if part.contains('(') && part.contains(')') {
+                            let (name, path) = part.split_once('(').unwrap();
+                            let (path, _) = path.split_once(')').unwrap();
+
+                            (name.trim().to_string(), Some(path.trim().to_string()))
+                        } else {
+                            (part.trim().to_string(), None)
+                        };
+
+                        Module { name, path }
+                    })
                     .collect()
             }
         };
@@ -121,7 +139,14 @@ pub fn make_crate(item: TokenStream) -> TokenStream {
                 let modules = file
                     .modules
                     .iter()
-                    .map(|module| format!("mod {module};"))
+                    .map(|module| {
+                        let name = &module.name;
+                        if let Some(path) = &module.path {
+                            format!("#[path = \"{path}\"]\nmod {name};\n")
+                        } else {
+                            format!("mod {name};\n")
+                        }
+                    })
                     .collect::<Vec<_>>()
                     .join("\n");
 

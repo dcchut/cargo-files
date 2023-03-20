@@ -54,3 +54,16 @@ fn new_module_layout() {
     "
     );
 }
+
+#[test]
+fn path_attribute() {
+    krate!(
+        r#"
+        src:
+          - lib.rs [scooby(apple.rs), banana]
+          - apple.rs
+          - banana:
+            - mod.rs
+    "#
+    );
+}

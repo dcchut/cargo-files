@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use syn::visit::Visit;
-use syn::ItemMod;
+use syn::{Expr, ExprLit, ItemMod, Lit, Meta};
 
 #[derive(Default, Debug)]
 struct ModVisitor {
@@ -18,16 +18,10 @@ impl<'ast> Visit<'ast> for ModVisitor {
         // Parse any #[path = "bla.rs"] declaration.
         let mut path = None;
         for attr in &item.attrs {
-            if attr.path.is_ident("path") {
-                if let Ok(syn::Meta::NameValue(syn::MetaNameValue {
-                    lit: syn::Lit::Str(lit),
-                    ..
-                })) = attr.parse_meta()
-                {
-                    path = Some(lit.value());
-                    break;
-                }
-            }
+            let Meta::NameValue(meta) = &attr.meta else { continue; };
+            let Expr::Lit(ExprLit { lit: Lit::Str(lit), .. }) = &meta.value else { continue; };
+            path = Some(lit.value());
+            break;
         }
 
         // AFAIK mod foobar {} blocks don't contribute a file
