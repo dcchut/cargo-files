@@ -66,7 +66,7 @@ impl Target {
         Target {
             path: canonicalized,
             kind: target.kind[0].clone(),
-            edition: target.edition.clone(),
+            edition: target.edition,
         }
     }
 }
