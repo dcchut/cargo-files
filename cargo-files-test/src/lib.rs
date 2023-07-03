@@ -44,7 +44,9 @@ impl<'de> Deserialize<'de> for File {
 
         // We have a complicated regex to test if the
         let Some(captures) = file_regex().captures(&value) else {
-            return Err(serde::de::Error::custom("value should be in the format `modulename [submodule1, submodule2]`"));
+            return Err(serde::de::Error::custom(
+                "value should be in the format `modulename [submodule1, submodule2]`",
+            ));
         };
 
         let name = String::from(captures.name("name").unwrap().as_str());

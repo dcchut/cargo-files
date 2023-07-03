@@ -18,8 +18,15 @@ impl<'ast> Visit<'ast> for ModVisitor {
         // Parse any #[path = "bla.rs"] declaration.
         let mut path = None;
         for attr in &item.attrs {
-            let Meta::NameValue(meta) = &attr.meta else { continue; };
-            let Expr::Lit(ExprLit { lit: Lit::Str(lit), .. }) = &meta.value else { continue; };
+            let Meta::NameValue(meta) = &attr.meta else {
+                continue;
+            };
+            let Expr::Lit(ExprLit {
+                lit: Lit::Str(lit), ..
+            }) = &meta.value
+            else {
+                continue;
+            };
             path = Some(lit.value());
             break;
         }
