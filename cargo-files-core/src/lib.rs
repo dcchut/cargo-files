@@ -79,7 +79,7 @@ impl PartialEq for Target {
 
 impl PartialOrd for Target {
     fn partial_cmp(&self, other: &Target) -> Option<Ordering> {
-        Some(self.path.cmp(&other.path))
+        Some(self.cmp(other))
     }
 }
 
