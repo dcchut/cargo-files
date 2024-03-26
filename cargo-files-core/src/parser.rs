@@ -70,6 +70,12 @@ impl Module {
         if let Some(path) = self.path.as_ref() {
             let source_path = relative_to
                 .parent()
+                .map(|p| p.to_path_buf())
+                .map(|p| {
+                    let mut parts = self.parts.clone();
+                    parts.pop();
+                    parts.iter().fold(p, |acc, part| acc.join(part))
+                })
                 .map(|p| p.join(path))
                 .and_then(|p| p.as_path().canonicalize().ok());
             return match source_path {
