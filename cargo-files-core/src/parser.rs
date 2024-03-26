@@ -45,7 +45,7 @@ impl<'ast> Visit<'ast> for ModVisitor {
 }
 
 #[derive(Debug)]
-struct Module {
+pub struct Module {
     parts: Vec<String>,
 
     /// An optional path override, set using the #[path = "..."] attribute.
@@ -83,7 +83,7 @@ impl Module {
             return if base_path.exists() {
                 Ok(base_path)
             } else {
-                Err(Error::ModuleNotFound)
+                Err(Error::ModuleNotFound((self, relative_to.to_path_buf())))
             };
         }
 
@@ -97,7 +97,7 @@ impl Module {
         if base_path.exists() {
             Ok(base_path)
         } else {
-            Err(Error::ModuleNotFound)
+            Err(Error::ModuleNotFound((self, relative_to.to_path_buf())))
         }
     }
 }

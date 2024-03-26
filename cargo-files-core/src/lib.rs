@@ -20,8 +20,8 @@ pub enum Error {
     ManifestError(#[from] io::Error),
     #[error("there was an error parsing a source file: {0}")]
     ParseError(#[from] syn::Error),
-    #[error("could not find module")]
-    ModuleNotFound,
+    #[error("could not find module: {0:?}")]
+    ModuleNotFound((parser::Module, std::path::PathBuf)),
     #[error("source file must have parent")]
     NoParent,
     #[error("source file must have a stem")]
