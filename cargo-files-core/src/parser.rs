@@ -21,6 +21,16 @@ impl<'ast> Visit<'ast> for ModVisitor {
             let Meta::NameValue(meta) = &attr.meta else {
                 continue;
             };
+            if !meta
+                .path
+                .get_ident()
+                .map(|i| i.to_string())
+                .as_ref()
+                .map_or(false, |i| i == "path")
+            {
+                continue;
+            };
+
             let Expr::Lit(ExprLit {
                 lit: Lit::Str(lit), ..
             }) = &meta.value
