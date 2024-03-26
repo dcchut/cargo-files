@@ -68,7 +68,10 @@ impl Module {
         // Handling for #[path = "..."] attribute.
         // https://doc.rust-lang.org/reference/items/modules.html#the-path-attribute
         if let Some(path) = self.path.as_ref() {
-            let source_path = relative_to.parent().map(|p| p.join(path));
+            let source_path = relative_to
+                .parent()
+                .map(|p| p.join(path))
+                .and_then(|p| p.as_path().canonicalize().ok());
             return match source_path {
                 Some(p) if p.exists() => Ok(p),
                 _ => Err(Error::ModuleNotFound((self, relative_to.to_path_buf()))),
