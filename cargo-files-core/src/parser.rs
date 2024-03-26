@@ -55,50 +55,63 @@ pub struct Module {
 impl Module {
     /// Return the source file corresponding to this module.
     fn resolve(self, relative_to: &Path) -> Result<PathBuf, Error> {
-        let base_name = relative_to
-            .file_stem()
-            .ok_or(Error::NoStem)?
-            .to_string_lossy();
-        let mut base_path = relative_to.parent().ok_or(Error::NoParent)?.to_path_buf();
-        let (last, parts) = self
-            .parts
-            .split_last()
-            .expect("module must have at least one part");
-        let is_mod_rs =
-            base_name == "mod" || (parts.is_empty() && (base_name == "lib" || base_name == "main"));
-
-        // for non-mod-rs files modules are relative to src/a.rs -> /src/a/
-        if !is_mod_rs {
-            base_path.push(format!("{base_name}"));
-        }
-
-        for part in parts {
-            base_path.push(part);
-        }
-
         // Handling for #[path = "..."] attribute.
         // https://doc.rust-lang.org/reference/items/modules.html#the-path-attribute
         if let Some(path) = self.path.as_ref() {
-            base_path.push(path);
-            return if base_path.exists() {
-                Ok(base_path)
-            } else {
-                Err(Error::ModuleNotFound((self, relative_to.to_path_buf())))
+            let source_path = relative_to.parent().map(|p| p.join(path));
+            return match source_path {
+                Some(p) if p.exists() => Ok(p),
+                _ => Err(Error::ModuleNotFound((self, relative_to.to_path_buf()))),
             };
         }
 
-        base_path.push(format!("{last}.rs"));
-        if base_path.exists() {
-            return Ok(base_path);
+        // try find module file according to new module system
+        // files modules are relative to src/a.rs -> /src/a/
+        let current_with_parts = || {
+            let mut path = relative_to.to_path_buf();
+            path.set_extension("");
+            self.parts.iter().for_each(|p| path.push(p));
+            path
+        };
+        let mut source_path = current_with_parts();
+        source_path.set_extension("rs");
+        if source_path.exists() {
+            return Ok(source_path);
         }
 
-        base_path.pop();
-        base_path.extend([last, "mod.rs"]);
-        if base_path.exists() {
-            Ok(base_path)
-        } else {
-            Err(Error::ModuleNotFound((self, relative_to.to_path_buf())))
-        }
+        //
+        let parent_with_parts = || {
+            relative_to
+                .parent()
+                .map(|base| PathBuf::from(base))
+                .map(|mut path| {
+                    self.parts.iter().for_each(|p| path.push(p));
+                    path
+                })
+        };
+
+        let source_path = parent_with_parts().map(|mut p| {
+            p.set_extension("rs");
+            p
+        });
+
+        match source_path {
+            Some(p) if p.exists() => return Ok(p),
+            _ => {}
+        };
+
+        //
+        let source_path = parent_with_parts().map(|mut p| {
+            p.push("mod.rs");
+            p
+        });
+
+        match source_path {
+            Some(p) if p.exists() => return Ok(p),
+            _ => {}
+        };
+
+        return Err(Error::ModuleNotFound((self, relative_to.to_path_buf())));
     }
 }
 
