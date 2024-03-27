@@ -111,3 +111,22 @@ fn nested_module_non_mod_rs() {
     "#
     );
 }
+
+#[test]
+fn module_in_subdir() {
+    // Regression test for #7
+    krate!(
+        r#"
+        src:
+          - lib.rs [new, subdir2, subdir]; subdir [subdir_module]
+          - new.rs [new_sub]
+          - new:
+            - new_sub.rs
+          - subdir:
+            - subdir_module.rs
+          - subdir2:
+            - mod.rs [subdir_module]
+            - subdir_module.rs
+    "#
+    );
+}
