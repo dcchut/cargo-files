@@ -4,7 +4,8 @@ fn run_test(krate: &tempfile::TempDir) -> String {
 
     let mut paths = Vec::new();
     for target in projects {
-        let files = cargo_files_core::get_target_files(&target).unwrap();
+        let files =
+            cargo_files_core::get_target_files(&target).expect("failed to get target files");
         for file in files {
             let relative_path = pathdiff::diff_paths(&file, &crate_root).unwrap();
             let components: Vec<_> = relative_path
@@ -127,6 +128,74 @@ fn module_in_subdir() {
           - subdir2:
             - mod.rs [subdir_module]
             - subdir_module.rs
+    "#
+    );
+}
+
+#[test]
+fn module_in_top_level_file() {
+    // Based on example in https://github.com/dtolnay/syn/blob/master/src/parse.rs
+    krate!(
+        r#"
+        src:
+          - lib.rs [parse]
+          - parse.rs [discouraged(discouraged.rs)]
+          - discouraged.rs
+    "#
+    );
+}
+
+#[test]
+fn difference_between_mod_and_not_mod_1() {
+    krate!(
+        r#"
+        src:
+          - lib.rs [a]
+          - a.rs [b, c]
+          - a:
+            - b.rs
+            - c:
+              - mod.rs
+    "#
+    );
+}
+
+#[test]
+fn difference_between_mod_and_not_mod_2() {
+    krate!(
+        r#"
+        src:
+          - lib.rs [a]
+          - a:
+            - mod.rs [b, c]
+            - b.rs
+            - c:
+              - mod.rs
+    "#
+    );
+}
+
+#[test]
+fn nested_module_paths() {
+    krate!(
+        r#"
+        src:
+          - lib.rs [a]
+          - a.rs [b(canned)]; b [data(soup.rs)]
+          - canned:
+            - soup.rs
+    "#
+    );
+}
+
+#[test]
+fn nested_module_paths_in_root() {
+    krate!(
+        r#"
+        src:
+          - lib.rs [a(canned)]; a [data(soup.rs)]
+          - canned:
+            - soup.rs
     "#
     );
 }

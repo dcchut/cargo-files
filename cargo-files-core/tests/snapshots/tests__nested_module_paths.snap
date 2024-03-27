@@ -1,0 +1,7 @@
+---
+source: cargo-files-core/tests/tests.rs
+expression: run_test(&krate)
+---
+src/a.rs
+src/canned/soup.rs
+src/lib.rs
