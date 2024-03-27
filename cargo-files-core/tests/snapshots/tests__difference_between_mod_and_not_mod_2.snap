@@ -1,0 +1,8 @@
+---
+source: cargo-files-core/tests/tests.rs
+expression: run_test(&krate)
+---
+src/a/b.rs
+src/a/c/mod.rs
+src/a/mod.rs
+src/lib.rs

@@ -1,0 +1,10 @@
+---
+source: cargo-files-core/tests/tests.rs
+expression: run_test(&krate)
+---
+src/lib.rs
+src/new.rs
+src/new/new_sub.rs
+src/subdir/subdir_module.rs
+src/subdir2/mod.rs
+src/subdir2/subdir_module.rs
