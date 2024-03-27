@@ -13,11 +13,12 @@ use syn::parse;
 /// - file.rs [mod1]
 /// - file.rs [mod1, mod2]
 /// - file.rs [mod1(path/to/f.rs), mod2]
+/// - file.rs [mod1, mod2]; mod1 [mod2 mod3]
 /// and so on, and so forth.
 fn file_regex() -> &'static Regex {
     static FILE_REGEX: OnceCell<Regex> = OnceCell::new();
     FILE_REGEX.get_or_init(|| {
-        Regex::new(r"^(?P<name>\w+\.rs)\s*?(\s+\[(?P<modules>(\w+)(\(.*?\))?(\s*,\s*?\w+)*)])?$")
+        Regex::new(r"^(?P<name>\w+(\.rs)?)\s*?(\s+\[(?P<modules>(\w+)(\(.*?\))?(\s*,\s*?\w+)*)])?$")
             .expect("failed to compile regex")
     })
 }
@@ -26,6 +27,7 @@ fn file_regex() -> &'static Regex {
 struct Module {
     name: String,
     path: Option<String>,
+    children: Option<Vec<Module>>,
 }
 
 /// Represents a file description such as mod.rs [cat]
@@ -42,38 +44,73 @@ impl<'de> Deserialize<'de> for File {
     {
         let value = String::deserialize(deserializer)?;
 
-        // We have a complicated regex to test if the
-        let Some(captures) = file_regex().captures(&value) else {
-            return Err(serde::de::Error::custom(
-                "value should be in the format `modulename [submodule1, submodule2]`",
-            ));
-        };
+        let mut name_to_module = HashMap::new();
 
-        let name = String::from(captures.name("name").unwrap().as_str());
-        let modules = match captures.name("modules") {
-            None => Vec::new(),
-            Some(modules) => {
-                // modules is a comma separated list, with non-significant whitespace
-                let modules = modules.as_str();
-                modules
-                    .split(',')
-                    .map(|part| {
-                        let (name, path) = if part.contains('(') && part.contains(')') {
-                            let (name, path) = part.split_once('(').unwrap();
-                            let (path, _) = path.split_once(')').unwrap();
+        for part in value.split(';') {
+            let Some(captures) = file_regex().captures(part.trim()) else {
+                return Err(serde::de::Error::custom(
+                    "value should be in the format `modulename [submodule1, submodule2]`",
+                ));
+            };
 
-                            (name.trim().to_string(), Some(path.trim().to_string()))
-                        } else {
-                            (part.trim().to_string(), None)
-                        };
+            let name = String::from(captures.name("name").unwrap().as_str());
+            let modules = match captures.name("modules") {
+                None => Vec::new(),
+                Some(modules) => {
+                    // modules is a comma separated list, with non-significant whitespace
+                    let modules = modules.as_str();
+                    modules
+                        .split(',')
+                        .map(|part| {
+                            let (name, path) = if part.contains('(') && part.contains(')') {
+                                let (name, path) = part.split_once('(').unwrap();
+                                let (path, _) = path.split_once(')').unwrap();
 
-                        Module { name, path }
-                    })
-                    .collect()
+                                (name.trim().to_string(), Some(path.trim().to_string()))
+                            } else {
+                                (part.trim().to_string(), None)
+                            };
+
+                            Module {
+                                name,
+                                path,
+                                children: None,
+                            }
+                        })
+                        .collect()
+                }
+            };
+
+            name_to_module.insert(name, modules);
+        }
+
+        // There should be a single root module having a .rs extension
+        // FIXME: validate
+        let root_entry = name_to_module
+            .keys()
+            .find(|name| name.ends_with(".rs"))
+            .cloned()
+            .unwrap();
+        let mut root_modules = name_to_module.remove(&root_entry).unwrap();
+
+        let module_name_to_index: HashMap<_, _> = root_modules
+            .iter()
+            .enumerate()
+            .map(|(i, x)| (x.name.clone(), i))
+            .collect();
+
+        for (name, module) in name_to_module {
+            let target_module: &mut Module = &mut root_modules[module_name_to_index[&name]];
+            if target_module.children.is_none() {
+                target_module.children = Some(Vec::new());
             }
-        };
+            target_module.children.as_mut().unwrap().extend(module);
+        }
 
-        Ok(File { name, modules })
+        Ok(File {
+            name: root_entry,
+            modules: root_modules,
+        })
     }
 }
 
@@ -123,6 +160,25 @@ impl DirTree {
     }
 }
 
+fn render_module(module: &Module) -> String {
+    let name = &module.name;
+    let path_attr = module
+        .path
+        .as_ref()
+        .map_or_else(String::new, |path| format!("#[path = \"{path}\"]\n"));
+
+    if let Some(children) = &module.children {
+        let child_entries = children.iter().map(render_module).collect::<Vec<_>>();
+        format!(
+            "{}mod {name} {{\n{}\n}}",
+            path_attr,
+            child_entries.join("\n")
+        )
+    } else {
+        format!("{}mod {name};", path_attr)
+    }
+}
+
 #[proc_macro]
 pub fn make_crate(item: TokenStream) -> TokenStream {
     let input: syn::LitStr = parse(item).expect("failed to parse as literal");
@@ -141,14 +197,7 @@ pub fn make_crate(item: TokenStream) -> TokenStream {
                 let modules = file
                     .modules
                     .iter()
-                    .map(|module| {
-                        let name = &module.name;
-                        if let Some(path) = &module.path {
-                            format!("#[path = \"{path}\"]\nmod {name};\n")
-                        } else {
-                            format!("mod {name};\n")
-                        }
-                    })
+                    .map(render_module)
                     .collect::<Vec<_>>()
                     .join("\n");
 

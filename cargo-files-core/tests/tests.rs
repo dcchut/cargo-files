@@ -67,3 +67,35 @@ fn path_attribute() {
     "#
     );
 }
+
+#[test]
+fn nested_module() {
+    krate!(
+        r#"
+        src:
+          - lib.rs [inline, apple]; inline [inner(other.rs), cat]
+          - apple.rs
+          - inline:
+            - other.rs
+            - cat.rs
+    "#
+    );
+}
+
+#[test]
+fn nested_module_non_mod_rs() {
+    // path attributes in module blocks are resolved differently depending on the kind
+    // of source file the path attribute is located in; see previous example
+    // c.f. https://doc.rust-lang.org/reference/items/modules.html#the-path-attribute
+    krate!(
+        r#"
+        src:
+          - lib.rs
+          - apple.rs [inline]; inline [inner(other.rs), cat]
+          - apple:
+            - inline:
+              - other.rs
+              - cat.rs
+    "#
+    );
+}
