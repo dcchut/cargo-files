@@ -54,23 +54,24 @@ struct Module {
 
 impl Module {
     /// Return the source file corresponding to this module.
-    fn resolve(self, relative_to: &Path) -> Result<PathBuf, Error> {
-        let base_name = relative_to
-            .file_stem()
-            .ok_or(Error::NoStem)?
-            .to_string_lossy();
+    fn resolve(self, root_path: &Path, relative_to: &Path) -> Result<PathBuf, Error> {
+        // /src/a/b.rs -> b
+        let base_name = relative_to.file_stem().ok_or(Error::NoStem)?;
+
+        let is_mod_rs = (root_path == relative_to) || base_name == "mod";
+
+        // /src/a/b.rs -> /src/a/
         let mut base_path = relative_to.parent().ok_or(Error::NoParent)?.to_path_buf();
+
+        // for a non-mod-rs file e.g. /src/a.rs, modules are taken relative to /src/a/
+        if !is_mod_rs {
+            base_path.push(base_name);
+        }
+
         let (last, parts) = self
             .parts
             .split_last()
             .expect("module must have at least one part");
-        let is_mod_rs =
-            base_name == "mod" || (parts.is_empty() && (base_name == "lib" || base_name == "main"));
-
-        // for non-mod-rs files modules are relative to src/a.rs -> /src/a/
-        if !is_mod_rs {
-            base_path.push(format!("{base_name}"));
-        }
 
         for part in parts {
             base_path.push(part);
@@ -102,7 +103,11 @@ impl Module {
     }
 }
 
-pub fn extract_crate_files(path: &Path, acc: &mut HashSet<PathBuf>) -> Result<(), Error> {
+pub fn extract_crate_files(
+    root_path: &Path,
+    path: &Path,
+    acc: &mut HashSet<PathBuf>,
+) -> Result<(), Error> {
     acc.insert(path.to_path_buf());
     let source = fs::read_to_string(path)?;
 
@@ -112,8 +117,8 @@ pub fn extract_crate_files(path: &Path, acc: &mut HashSet<PathBuf>) -> Result<()
     visitor.visit_file(&file);
 
     for module in visitor.modules {
-        let module_path = module.resolve(path)?;
-        extract_crate_files(&module_path, acc)?;
+        let module_path = module.resolve(root_path, path)?;
+        extract_crate_files(root_path, &module_path, acc)?;
         acc.insert(module_path);
     }
 

@@ -31,7 +31,7 @@ pub enum Error {
 /// Get all source files for the given target.
 pub fn get_target_files(target: &Target) -> Result<HashSet<PathBuf>, Error> {
     let mut acc = HashSet::new();
-    extract_crate_files(&target.path, &mut acc)?;
+    extract_crate_files(&target.path, &target.path, &mut acc)?;
     Ok(acc)
 }
 

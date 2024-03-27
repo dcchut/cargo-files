@@ -69,7 +69,19 @@ fn path_attribute() {
 }
 
 #[test]
-fn nested_module() {
+fn nested_module_basic() {
+    krate!(
+        r#"
+        src:
+          - lib.rs [inline]; inline [apple]
+          - inline:
+            - apple.rs
+    "#
+    );
+}
+
+#[test]
+fn nested_module_mod_rs() {
     krate!(
         r#"
         src:
@@ -90,12 +102,12 @@ fn nested_module_non_mod_rs() {
     krate!(
         r#"
         src:
-          - lib.rs
-          - apple.rs [inline]; inline [inner(other.rs), cat]
+          - lib.rs [apple]
+          - apple.rs [inline]; inline [inner(other.rs), tat]
           - apple:
             - inline:
               - other.rs
-              - cat.rs
+              - tat.rs
     "#
     );
 }
