@@ -21,6 +21,12 @@ impl<'ast> Visit<'ast> for ModVisitor {
             let Meta::NameValue(meta) = &attr.meta else {
                 continue;
             };
+
+            let Some(attr_ident) = attr.path().get_ident() else { continue; };
+            if attr_ident != "path" {
+                continue;
+            }
+
             let Expr::Lit(ExprLit {
                 lit: Lit::Str(lit), ..
             }) = &meta.value
@@ -109,7 +115,8 @@ pub fn extract_crate_files(
     acc: &mut HashSet<PathBuf>,
 ) -> Result<(), Error> {
     acc.insert(path.to_path_buf());
-    let source = fs::read_to_string(path)?;
+    let source = fs::read_to_string(path)
+        .map_err(|e| Error::FileError(path.to_path_buf(), e))?;
 
     // Extract all the mod definitions in the given file
     let file = syn::parse_file(&source)?;

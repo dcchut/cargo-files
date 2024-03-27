@@ -17,7 +17,9 @@ pub enum Error {
     #[error("no targets were found")]
     NoTargets,
     #[error("there was an error reading Cargo.toml: {0}")]
-    ManifestError(#[from] io::Error),
+    ManifestError(io::Error),
+    #[error("there was an error reading {0}: {1}")]
+    FileError(PathBuf, io::Error),
     #[error("there was an error parsing a source file: {0}")]
     ParseError(#[from] syn::Error),
     #[error("could not find module")]
@@ -114,7 +116,9 @@ fn get_targets_recursive(
     targets: &mut BTreeSet<Target>,
     visited: &mut BTreeSet<String>,
 ) -> Result<(), Error> {
-    let metadata = get_cargo_metadata(manifest_path)?;
+    let metadata = get_cargo_metadata(manifest_path)
+        .map_err(|e| Error::ManifestError(e))?;
+
     for package in &metadata.packages {
         add_targets(&package.targets, targets);
 
