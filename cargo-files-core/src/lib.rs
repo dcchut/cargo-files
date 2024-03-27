@@ -116,8 +116,7 @@ fn get_targets_recursive(
     targets: &mut BTreeSet<Target>,
     visited: &mut BTreeSet<String>,
 ) -> Result<(), Error> {
-    let metadata = get_cargo_metadata(manifest_path)
-        .map_err(|e| Error::ManifestError(e))?;
+    let metadata = get_cargo_metadata(manifest_path).map_err(|e| Error::ManifestError(e))?;
 
     for package in &metadata.packages {
         add_targets(&package.targets, targets);

@@ -22,7 +22,9 @@ impl<'ast> Visit<'ast> for ModVisitor {
                 continue;
             };
 
-            let Some(attr_ident) = attr.path().get_ident() else { continue; };
+            let Some(attr_ident) = attr.path().get_ident() else {
+                continue;
+            };
             if attr_ident != "path" {
                 continue;
             }
@@ -115,8 +117,7 @@ pub fn extract_crate_files(
     acc: &mut HashSet<PathBuf>,
 ) -> Result<(), Error> {
     acc.insert(path.to_path_buf());
-    let source = fs::read_to_string(path)
-        .map_err(|e| Error::FileError(path.to_path_buf(), e))?;
+    let source = fs::read_to_string(path).map_err(|e| Error::FileError(path.to_path_buf(), e))?;
 
     // Extract all the mod definitions in the given file
     let file = syn::parse_file(&source)?;
@@ -130,4 +131,88 @@ pub fn extract_crate_files(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_path_attribute_parsing() {
+        let source = r#"
+        #[path = "apple.rs"]
+        mod banana;
+        "#;
+
+        let file = syn::parse_file(source).unwrap();
+        let mut visitor = ModVisitor::default();
+        visitor.visit_file(&file);
+
+        assert_eq!(visitor.modules.len(), 1);
+        let module = visitor.modules.pop().unwrap();
+
+        assert_eq!(module.path.as_deref(), Some("apple.rs"));
+        assert_eq!(module.parts, ["banana"]);
+    }
+
+    #[test]
+    fn test_nested_mod_parsing() {
+        let source = r#"
+        mod a {
+            mod b {
+                mod c {
+                    mod d;
+                }
+            }
+        }
+        "#;
+
+        let file = syn::parse_file(source).unwrap();
+        let mut visitor = ModVisitor::default();
+        visitor.visit_file(&file);
+
+        assert_eq!(visitor.modules.len(), 1);
+        let module = visitor.modules.pop().unwrap();
+        assert_eq!(module.path, None);
+        assert_eq!(module.parts, ["a", "b", "c", "d"]);
+    }
+
+    #[test]
+    fn test_nested_mod_parsing_with_path_attribute() {
+        let source = r#"
+        mod a {
+            mod b {
+                #[path = "putty.rs"]
+                mod c;
+            }
+        }
+        "#;
+
+        let file = syn::parse_file(source).unwrap();
+        let mut visitor = ModVisitor::default();
+        visitor.visit_file(&file);
+
+        assert_eq!(visitor.modules.len(), 1);
+        let module = visitor.modules.pop().unwrap();
+        assert_eq!(module.path.as_deref(), Some("putty.rs"));
+        assert_eq!(module.parts, ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_docstring_on_module_ignored() {
+        // Regression test for #7
+        let source = r#"
+        ///
+        mod intern;
+        "#;
+
+        let file = syn::parse_file(source).unwrap();
+        let mut visitor = ModVisitor::default();
+        visitor.visit_file(&file);
+
+        assert_eq!(visitor.modules.len(), 1);
+        let module = visitor.modules.pop().unwrap();
+        assert_eq!(module.path, None);
+        assert_eq!(module.parts, ["intern"]);
+    }
 }
