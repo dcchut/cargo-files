@@ -2,7 +2,7 @@
 pub mod parser;
 
 use crate::parser::extract_crate_files;
-use cargo_metadata::Edition;
+pub use cargo_metadata::Edition;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashSet};
 use std::hash::{Hash, Hasher};
