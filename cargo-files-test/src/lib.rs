@@ -14,6 +14,7 @@ use syn::parse;
 /// - file.rs [mod1, mod2]
 /// - file.rs [mod1(path/to/f.rs), mod2]
 /// - file.rs [mod1, mod2]; mod1 [mod2 mod3]
+///
 /// and so on, and so forth.
 fn file_regex() -> &'static Regex {
     static FILE_REGEX: OnceCell<Regex> = OnceCell::new();
