@@ -2,7 +2,7 @@
 name = "cargo-files"
 version = "0.3.1"
 authors = ["Robert Usher <266585+dcchut@users.noreply.github.com>"]
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "List all source files in a cargo crate"
 repository = "https://github.com/dcchut/cargo-files"
@@ -10,5 +10,5 @@ documentation = "https://docs.rs/cargo-files"
 readme = "../README.md"
 
 [dependencies]
-cargo-files-core = { path = "../cargo-files-core", version = "0.2.1" }
+cargo-files-core = { path = "../cargo-files-core", version = "0.3.1" }
 clap = { version = "4.5", features = ["derive"] }
