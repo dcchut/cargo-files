@@ -10,14 +10,14 @@ documentation = "https://docs.rs/cargo-files"
 readme = "../README.md"
 
 [dependencies]
-cargo_metadata = "0.18"
+cargo_metadata = "0.20"
 dunce = "1.0"
 proc-macro2 = "1.0"
 syn = { version = "2.0", features = ["full", "visit", "extra-traits"]}
-thiserror = "1.0"
+thiserror = "2.0"
 
 [dev-dependencies]
 cargo-files-test = { path = "../cargo-files-test" }
-tempfile = "3.4"
+tempfile = "3.10"
 pathdiff = "0.2"
-insta = { version = "1.28.0", features = ["json"] }
+insta = { version = "1.43", features = ["json"] }
