@@ -8,6 +8,7 @@ use std::collections::{BTreeSet, HashSet};
 use std::hash::{Hash, Hasher};
 use std::io::{self};
 use std::path::{Path, PathBuf};
+use cargo_metadata::TargetKind;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -55,7 +56,7 @@ pub struct Target {
     /// A path to the main source file of the target.
     pub path: PathBuf,
     /// A kind of target (e.g., lib, bin, example, ...).
-    pub kind: String,
+    pub kind: TargetKind,
     /// Rust edition for this target.
     pub edition: Edition,
 }

@@ -1,11 +1,11 @@
 //! This crate provides a macro that can be used to test cargo-files-core.
 
-use once_cell::sync::OnceCell;
 use proc_macro::TokenStream;
 use quote::quote;
 use regex::Regex;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
+use std::sync::LazyLock;
 use syn::parse;
 
 /// Matches something looking like:
@@ -17,11 +17,11 @@ use syn::parse;
 ///
 /// and so on, and so forth.
 fn file_regex() -> &'static Regex {
-    static FILE_REGEX: OnceCell<Regex> = OnceCell::new();
-    FILE_REGEX.get_or_init(|| {
+    static FILE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(r"^(?P<name>\w+(\.rs)?)\s*?(\s+\[(?P<modules>(\w+)(\(.*?\))?(\s*,\s*?\w+)*)])?$")
             .expect("failed to compile regex")
-    })
+    });
+    &*FILE_REGEX
 }
 
 #[derive(Clone, Debug)]
